@@ -1,0 +1,79 @@
+@startuml
+!include <C4/C4_Container>
+!include <C4/C4_Context>
+
+title Диаграмма контейнеров системы "Кинобездна" (To-Be)
+
+' Персоны
+Person(web_user, "Веб-пользователь", "Посетитель сайта через браузер")
+Person(mobile_user, "Мобильный пользователь", "Пользователь приложения на iOS/Android")
+Person(tv_user, "Smart TV пользователь", "Пользователь приложения на Smart TV")
+
+' Внешние системы
+System_Ext(cdn, "CDN", "Доставка видео-контента")
+System_Ext(payment_gateway, "Платёжный шлюз", "Внешняя платёжная система")
+System_Ext(recommendation_ext, "Сторонняя рекомендательная система", "Внешний сервис рекомендаций")
+
+' Граница внутренних контейнеров
+Container_Boundary(backend, "Внутренние сервисы") {
+    Container(gateway, "API Gateway", "Kong / Spring Cloud Gateway", "Единая точка входа, маршрутизация, агрегация")
+
+    Container(user_svc, "User Service", "Go / Java", "Управление пользователями, аутентификация")
+    Container(sub_svc, "Subscription Service", "Go / Java", "Подписки, тарифы")
+    Container(payment_svc, "Payment Service", "Go / Java", "Обработка платежей")
+    Container(catalog_svc, "Catalog Service", "Go / Java", "Метаданные фильмов (жанры, актёры, оценки)")
+    Container(video_svc, "Video Service", "Go / Java", "Управление видео, ссылки на CDN")
+    Container(interaction_svc, "User Interaction Service", "Go / Java", "Избранное, оценки, комментарии")
+    Container(discount_svc, "Discount Service", "Go / Java", "Промокоды, скидки")
+    Container(rec_adapter, "Recommendation Adapter", "Go / Java", "Адаптер для внешней рекомендательной системы")
+
+    ContainerDb(shared_db, "Единая база данных", "PostgreSQL", "Хранит все данные: пользователи, подписки, платежи, фильмы, видео, взаимодействия, скидки")
+
+    Container(message_broker, "Message Broker", "Kafka", "Асинхронная шина событий (опционально)")
+}
+
+' Связи от клиентов к Gateway
+Rel(web_user, gateway, "HTTPS", "REST API")
+Rel(mobile_user, gateway, "HTTPS", "REST API")
+Rel(tv_user, gateway, "HTTPS", "REST API")
+
+' Маршрутизация от Gateway к сервисам
+Rel(gateway, user_svc, "REST")
+Rel(gateway, sub_svc, "REST")
+Rel(gateway, payment_svc, "REST")
+Rel(gateway, catalog_svc, "REST")
+Rel(gateway, video_svc, "REST")
+Rel(gateway, interaction_svc, "REST")
+Rel(gateway, discount_svc, "REST")
+Rel(gateway, rec_adapter, "REST")
+
+' Все сервисы используют единую базу данных
+Rel(user_svc, shared_db, "SQL")
+Rel(sub_svc, shared_db, "SQL")
+Rel(payment_svc, shared_db, "SQL")
+Rel(catalog_svc, shared_db, "SQL")
+Rel(video_svc, shared_db, "SQL")
+Rel(interaction_svc, shared_db, "SQL")
+Rel(discount_svc, shared_db, "SQL")
+Rel(rec_adapter, shared_db, "SQL (кэш/чтение)")
+
+' Асинхронные события через брокер (опционально, можно показать пунктиром)
+Rel(user_svc, message_broker, "публикует события")
+Rel(sub_svc, message_broker, "публикует/подписывается")
+Rel(payment_svc, message_broker, "публикует")
+Rel(interaction_svc, message_broker, "публикует")
+Rel(message_broker, sub_svc, "доставляет")
+Rel(message_broker, interaction_svc, "доставляет")
+Rel(message_broker, rec_adapter, "доставляет")
+
+' Внешние связи
+Rel(rec_adapter, recommendation_ext, "REST/gRPC", "запрос рекомендаций")
+Rel(video_svc, cdn, "управление ссылками", "HTTP")
+Rel(payment_svc, payment_gateway, "API", "обработка платежей")
+
+' Прямая отдача видео с CDN клиентам
+Rel(web_user, cdn, "HTTPS", "стриминг видео")
+Rel(mobile_user, cdn, "HTTPS", "стриминг видео")
+Rel(tv_user, cdn, "HTTPS", "стриминг видео")
+
+@enduml

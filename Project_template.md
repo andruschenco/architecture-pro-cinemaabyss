@@ -45,7 +45,244 @@
    ```bash
    curl http://localhost:8000/api/movies
    ```
+###### Поскольку порт 8080 в ОС был занят, пришлось скорректировать внешний порт монолита 8080->8888   
+
+- Результат проверки 
+   ```bash
+    user@myPlatform:~/IdeaProjects/architecture-pro-cinemaabyss/tests/postman$ npm test
+
+    > cinemaabyss-api-tests@1.0.0 test
+    > node run-tests.js
+
+    Running tests against local environment...
+    newman: could not find "htmlextra" reporter
+    ensure that the reporter is installed in the same directory as newman
+    please install reporter using npm
+    
+    newman
+
+    CinemaAbyss API Tests
+
+    ❏ Monolith Service
+    ↳ Health Check
+    GET http://127.0.0.1:8888/health [200 OK, 124B, 61ms]
+    ✓  Status code is 200
+    
+    ↳ Get All Users
+    GET http://127.0.0.1:8888/api/users [200 OK, 415B, 178ms]
+    ✓  Status code is 200
+    ✓  Response is an array
+
+    ↳ Create User
+    POST http://127.0.0.1:8888/api/users [201 Created, 180B, 213ms]
+    ✓  Status code is 201
+    ✓  Response has id
+    
+    ↳ Get User by ID
+    GET http://127.0.0.1:8888/api/users?id=6 [200 OK, 175B, 53ms]
+    ✓  Status code is 200
+    ✓  User ID matches
+    
+    ↳ Get All Movies
+    GET http://127.0.0.1:8888/api/movies [200 OK, 2.66kB, 78ms]
+    ✓  Status code is 200
+    ✓  Response is an array
+    
+    ↳ Create Movie
+    POST http://127.0.0.1:8888/api/movies [201 Created, 246B, 14ms]
+    ✓  Status code is 201
+    ✓  Response has id
+    
+    ↳ Get Movie by ID
+    GET http://127.0.0.1:8888/api/movies?id=14 [200 OK, 241B, 5ms]
+    ✓  Status code is 200
+    ✓  Movie ID matches
+    
+    ↳ Create Payment
+    POST http://127.0.0.1:8888/api/payments [201 Created, 193B, 10ms]
+    ✓  Status code is 201
+    ✓  Response has id
+    
+    ↳ Get Payment by ID
+    GET http://127.0.0.1:8888/api/payments?id=6 [200 OK, 185B, 7ms]
+    ✓  Status code is 200
+    ✓  Payment ID matches
+    
+    ↳ Create Subscription
+    POST http://127.0.0.1:8888/api/subscriptions [201 Created, 231B, 8ms]
+    ✓  Status code is 201
+    ✓  Response has id
+    
+    ↳ Get Subscription by ID
+    GET http://127.0.0.1:8888/api/subscriptions?id=6 [200 OK, 226B, 5ms]
+    ✓  Status code is 200
+    ✓  Subscription ID matches
+    
+    ❏ Movies Microservice
+    ↳ Health Check
+    GET http://127.0.0.1:8081/api/movies/health [200 OK, 124B, 17ms]
+    ✓  Status code is 200
+    ✓  Status is true
+    
+    ↳ Get All Movies
+    GET http://127.0.0.1:8081/api/movies [200 OK, 2.79kB, 45ms]
+    ✓  Status code is 200
+    ✓  Response is an array
+    
+    ↳ Create Movie
+    POST http://127.0.0.1:8081/api/movies [201 Created, 283B, 7ms]
+    ✓  Status code is 201
+    ✓  Response has id
+
+    ↳ Get Movie by ID
+    GET http://127.0.0.1:8081/api/movies?id=15 [200 OK, 278B, 6ms]
+    ✓  Status code is 200
+    ✓  Movie ID matches
+    
+    ❏ Events Microservice
+    ↳ Health Check
+    GET http://127.0.0.1:8082/api/events/health [errored]
+    connect ECONNREFUSED 127.0.0.1:8082
+    2. Status code is 200
+       3. Status is true
+    
+    ↳ Create Movie Event
+    POST http://127.0.0.1:8082/api/events/movie [errored]
+    connect ECONNREFUSED 127.0.0.1:8082
+    5. Status code is 201
+       6. Response has status success
+    
+    ↳ Create User Event
+    POST http://127.0.0.1:8082/api/events/user [errored]
+    connect ECONNREFUSED 127.0.0.1:8082
+    8. Status code is 201
+       9. Response has status success
+    
+    ↳ Create Payment Event
+    POST http://127.0.0.1:8082/api/events/payment [errored]
+    connect ECONNREFUSED 127.0.0.1:8082
+    11. Status code is 201
+        12. Response has status success
+    
+    ❏ Proxy Service
+    ↳ Health Check
+    GET http://127.0.0.1:8000/health [200 OK, 178B, 19ms]
+    ✓  Status code is 200
+    
+    ↳ Get All Movies via Proxy
+    GET http://127.0.0.1:8000/api/movies [200 OK, 3kB, 20ms]
+    ✓  Status code is 200
+    ✓  Response is an array
+    
+    ↳ Get All Users via Proxy
+    GET http://127.0.0.1:8000/api/users [200 OK, 536B, 7ms]
+    ✓  Status code is 200
+    ✓  Response is an array
+    
+    ┌─────────────────────────┬───────────────────┬──────────────────┐
+    │                         │          executed │           failed │
+    ├─────────────────────────┼───────────────────┼──────────────────┤
+    │              iterations │                 1 │                0 │
+    ├─────────────────────────┼───────────────────┼──────────────────┤
+    │                requests │                22 │                4 │
+    ├─────────────────────────┼───────────────────┼──────────────────┤
+    │            test-scripts │                22 │                0 │
+    ├─────────────────────────┼───────────────────┼──────────────────┤
+    │      prerequest-scripts │                 0 │                0 │
+    ├─────────────────────────┼───────────────────┼──────────────────┤
+    │              assertions │                42 │                8 │
+    ├─────────────────────────┴───────────────────┴──────────────────┤
+    │ total run duration: 3.6s                                       │
+    ├────────────────────────────────────────────────────────────────┤
+    │ total data received: 9.9kB (approx)                            │
+    ├────────────────────────────────────────────────────────────────┤
+    │ average response time: 42ms [min: 5ms, max: 213ms, s.d.: 59ms] │
+    └────────────────────────────────────────────────────────────────┘
+
+    #  failure                            detail
+
+    01.  Error                              connect ECONNREFUSED 127.0.0.1:8082                                                                                                      
+     at request                                                                                                                               
+     inside ""
+
+    02.  AssertionError                     Status code is 200                                                                                                                       
+         expected PostmanResponse{ …(5) } to have property 'code'                                                                                 
+         at assertion:0 in test-script                                                                                                            
+         inside "Events Microservice / Health Check"
+
+    03.  JSONError                          Status is true                                                                                                                           
+     Unexpected token u in JSON at position 0                                                                                                 
+     at assertion:1 in test-script                                                                                                            
+     inside "Events Microservice / Health Check"
+
+    04.  Error                              connect ECONNREFUSED 127.0.0.1:8082                                                                                                      
+         at request                                                                                                                               
+         inside ""
+
+    05.  AssertionError                     Status code is 201                                                                                                                       
+     expected PostmanResponse{ …(5) } to have property 'code'                                                                                 
+     at assertion:0 in test-script                                                                                                            
+     inside "Events Microservice / Create Movie Event"
+
+    06.  JSONError                          Response has status success                                                                                                              
+         Unexpected token u in JSON at position 0                                                                                                 
+         at assertion:1 in test-script                                                                                                            
+         inside "Events Microservice / Create Movie Event"
+
+    07.  Error                              connect ECONNREFUSED 127.0.0.1:8082                                                                                                      
+     at request                                                                                                                               
+     inside ""
+
+    08.  AssertionError                     Status code is 201                                                                                                                       
+         expected PostmanResponse{ …(5) } to have property 'code'                                                                                 
+         at assertion:0 in test-script                                                                                                            
+         inside "Events Microservice / Create User Event"
+
+    09.  JSONError                          Response has status success                                                                                                              
+     Unexpected token u in JSON at position 0                                                                                                 
+     at assertion:1 in test-script                                                                                                            
+     inside "Events Microservice / Create User Event"
+
+    10.  Error                              connect ECONNREFUSED 127.0.0.1:8082                                                                                                      
+         at request                                                                                                                               
+         inside ""
+
+    11.  AssertionError                     Status code is 201                                                                                                                       
+     expected PostmanResponse{ …(5) } to have property 'code'                                                                                 
+     at assertion:0 in test-script                                                                                                            
+     inside "Events Microservice / Create Payment Event"
+
+    12.  JSONError                          Response has status success                                                                                                              
+         Unexpected token u in JSON at position 0                                                                                                 
+         at assertion:1 in test-script                                                                                                            
+         inside "Events Microservice / Create Payment Event"                                                                                      
+         Newman run completed!
+         Total requests: 22
+         Failed requests: 4
+         Total assertions: 42
+         Failed assertions: 8
+        ```
+
+
 - Протестируйте постепенный переход, изменив переменную окружения MOVIES_MIGRATION_PERCENT в файле docker-compose.yml.
+     ```bash
+    При  10%
+    ____________________________
+    Newman run completed!
+    Total requests: 22
+    Failed requests: 18
+    Total assertions: 42
+    Failed assertions: 34
+    
+    При  90%
+    ____________________________
+    Newman run completed!
+    Total requests: 22
+    Failed requests: 4
+    Total assertions: 42
+    Failed assertions: 8
+   ```
+
 
 ### 2. Kafka
  Вам как архитектуру нужно также проверить гипотезу насколько просто реализовать применение Kafka в данной архитектуре.
