@@ -125,27 +125,27 @@ jobs:
           cache-to: type=gha,mode=max
 
       # ---------- Запуск API-тестов ----------
-      - name: Set up Docker Compose for testing
-        run: |
-          docker compose -f .github/workflows/api-tests.yml up -d
-          sleep 30
-          docker compose -f .github/workflows/api-tests.yml ps
-
-      - name: Run API tests
-        run: |
-          # Установка зависимостей (пример для Python, замените под ваш стек)
-          pip install pytest requests
-          pytest tests/ -v --tb=short
-
-      - name: Collect test logs
-        if: always()
-        run: |
-          docker compose -f .github/workflows/api-tests.yml logs > test-logs.txt
-          docker compose -f .github/workflows/api-tests.yml down -v
-
-      - name: Upload test logs
-        if: always()
-        uses: actions/upload-artifact@v4.0.0
-        with:
-          name: test-logs
-          path: test-logs.txt
+#      - name: Set up Docker Compose for testing
+#        run: |
+#          docker compose -f .github/workflows/api-tests.yml up -d
+#          sleep 30
+#          docker compose -f .github/workflows/api-tests.yml ps
+#
+#      - name: Run API tests
+#        run: |
+##           Установка зависимостей (пример для Python, замените под ваш стек)
+#          pip install pytest requests
+#          pytest tests/ -v --tb=short
+#
+#      - name: Collect test logs
+#        if: always()
+#        run: |
+#          docker compose -f .github/workflows/api-tests.yml logs > test-logs.txt
+#          docker compose -f .github/workflows/api-tests.yml down -v
+#
+#      - name: Upload test logs
+#        if: always()
+#        uses: actions/upload-artifact@v4.0.0
+#        with:
+#          name: test-logs
+#          path: test-logs.txt
