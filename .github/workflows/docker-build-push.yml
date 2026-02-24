@@ -140,8 +140,8 @@ jobs:
       - name: Collect test logs
         if: always()
         run: |
-          docker compose -f docker-compose.test.yml logs > test-logs.txt
-          docker compose -f docker-compose.test.yml down -v
+          docker compose -f api-tests.yml logs > test-logs.txt
+          docker compose -f api-tests.yml down -v
 
       - name: Upload test logs
         if: always()
