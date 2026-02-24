@@ -1,4 +1,4 @@
-version: '3.8'
+#version: '3.8'
 
 services:
   # PostgreSQL Database
@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: postgres_password
       POSTGRES_DB: cinemaabyss
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./src/database/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -35,6 +35,12 @@ services:
   kafka:
     image: wurstmeister/kafka:2.13-2.7.0
     container_name: cinemaabyss-kafka
+    # ... ваши environment и ports ...
+    healthcheck:
+      test: [ "CMD-SHELL", "nc -z localhost 9092 || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
       - zookeeper
     ports:
@@ -57,9 +63,11 @@ services:
       dockerfile: Dockerfile
     container_name: cinemaabyss-monolith
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy  # Ждать, пока pg_isready вернет 0
     ports:
-      - "8080:8080"
+      - "8888:8080"
+#      - "8080:8080" # 8080 busy by docker-proxy on OS
     environment:
       PORT: 8080
       DB_CONNECTION_STRING: postgres://postgres:postgres_password@postgres:5432/cinemaabyss?sslmode=disable
@@ -73,7 +81,8 @@ services:
       dockerfile: Dockerfile
     container_name: cinemaabyss-movies-service
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy  # Ждать, пока pg_isready вернет 0
     ports:
       - "8081:8081"
     environment:
@@ -89,15 +98,22 @@ services:
       dockerfile: Dockerfile
     container_name: cinemaabyss-events-service
     depends_on:
-      - postgres
-      - kafka
+      postgres:
+        condition: service_healthy  # Ждать, пока pg_isready вернет 0
+      kafka:
+        condition: service_healthy
     ports:
       - "8082:8082"
     environment:
       PORT: 8082
       KAFKA_BROKERS: kafka:9092
+      # Автоматическое создание топиков, если их нет
+      SPRING_KAFKA_ADMIN_AUTO_CREATE: "true"
+      SERVER_PORT: 8082
     networks:
       - cinemaabyss-network
+
+
 
   # Proxy Service (API Gateway)
   proxy-service:
@@ -117,7 +133,7 @@ services:
       MOVIES_SERVICE_URL: http://movies-service:8081
       EVENTS_SERVICE_URL: http://events-service:8082
       GRADUAL_MIGRATION: "true"
-      MOVIES_MIGRATION_PERCENT: "50"
+      MOVIES_MIGRATION_PERCENT: "90"
     networks:
       - cinemaabyss-network
 
