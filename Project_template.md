@@ -398,6 +398,23 @@ jobs:
 #### Шаг 1
 Для деплоя в kubernetes необходимо залогиниться в docker registry Github'а.
 1. Создайте Personal Access Token (PAT) https://github.com/settings/tokens . Создавайте class с правом read:packages
+```bash
+    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
+   
+    user@myPlatform:~$ echo -n andruschenco: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 | base64
+    YW5kcnVzY2hlbmNvOmdocF9Mb3Jnak5aVW1XQXlveU93UDlRSThiY1VlcGtYc2MxWXptWHk=
+    user@myPlatform:~$
+   ```
+###### После создания токена необходимо авторизоваться на login ghcr.io, для этого выполним.
+```bash
+    echo "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" | docker login ghcr.io -u andruschenco --password-stdin
+    -----------------------------------
+    WARNING! Your credentials are stored unencrypted in '/home/user/.docker/config.json'.
+    Configure a credential helper to remove this warning. See
+    https://docs.docker.com/go/credential-store/
+   ```
+###### после успешной авторизации будет создан файл в ~/.docker/config.js.
+
 2. В src/kubernetes/*.yaml (event-service, monolith, movies-service и proxy-service)  отредактируйте путь до ваших образов
 ```bash
  spec:
@@ -423,26 +440,33 @@ jobs:
 то выполните
 
 и добавьте
-
 ```json 
- "auth": "имя пользователя:токен в base64"
+"auth": "имя пользователя:токен в base64"
 ```
 
 Чтобы получить значение в base64 можно выполнить команду
 ```bash
- echo -n ваш_логин:ваш_токен | base64
+  echo -n ваш_логин:ваш_токен | base64
 ```
 
 После заполнения config.json, также прогоните содержимое через base64
 
 ```bash
-cat .docker/config.json | base64
+  cat .docker/config.json | base64
 ```
 
 и полученное значение добавляем в
-
 ```bash
- .dockerconfigjson: значение в base64 файла ~/.docker/config.json
+  .dockerconfigjson: значение в base64 файла ~/.docker/config.json
+   ```
+```bash
+  user@myPlatform:~/.docker$ cat ./config.json | base64
+  ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6ICJZVzVrY25WelkyaGxibU52
+  T21kb2NGOU1iM0puYWs1YVZXMVhRWGx2ZVU5M1VEbFJTVGhpWTFWbGNHdFljMk14V1hwdFdIaz0i
+  CgkJfQoJfQp9
+```
+```base64
+ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6ICJZVzVrY25WelkyaGxibU52T21kb2NGOU1iM0puYWs1YVZXMVhRWGx2ZVU5M1VEbFJTVGhpWTFWbGNHdFljMk14V1hwdFdIaz0iCgkJfQoJfQp9
 ```
 
 #### Шаг 2
@@ -454,11 +478,11 @@ cat .docker/config.json | base64
 - Выполните дальшейшие шаги для поднятия кластера:
 
 1. Создайте namespace:
-  ```bash
+```bash
   kubectl apply -f src/kubernetes/namespace.yaml
   ```
 2. Создайте секреты и переменные
-  ```bash
+```bash
   kubectl apply -f src/kubernetes/configmap.yaml
   kubectl apply -f src/kubernetes/secret.yaml
   kubectl apply -f src/kubernetes/dockerconfigsecret.yaml
