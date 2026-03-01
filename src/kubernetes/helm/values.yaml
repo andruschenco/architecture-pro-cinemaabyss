@@ -5,7 +5,8 @@ global:
 
 # Image pull secrets
 imagePullSecrets:
-  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6
+  #  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6
+  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6ICJZVzVrY25WelkyaGxibU52T21kb2NGOU1iM0puYWs1YVZXMVhRWGx2ZVU5M1VEbFJTVGhpWTFWbGNHdFljMk14V1hwdFdIaz0iCgkJfQoJfQp9
 # Database configuration
 database:
   host: postgres
@@ -33,7 +34,7 @@ database:
 monolith:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/monolith
+    repository: ghcr.io/andruschenco/architecture-pro-cinemaabyss/monolith
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -53,7 +54,8 @@ monolith:
 proxyService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/proxy-service
+    #    repository: ghcr.io/db-exp/cinemaabysstest/proxy-service
+    repository: ghcr.io/andruschenco/architecture-pro-cinemaabyss/proxy-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -73,7 +75,7 @@ proxyService:
 moviesService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/movies-service
+    repository: ghcr.io/andruschenco/architecture-pro-cinemaabyss/movies-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -93,7 +95,7 @@ moviesService:
 eventsService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/events-service
+    repository: ghcr.io/andruschenco/architecture-pro-cinemaabyss/events-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -108,6 +110,18 @@ eventsService:
     port: 8082
     targetPort: 8082
     type: ClusterIP
+  env:
+    SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    SPRING_KAFKA_CONSUMER_GROUP_ID: "cinema-group"
+  probes:
+    readiness:
+      path: /api/events/health
+      initialDelaySeconds: 10
+      periodSeconds: 5
+    liveness:
+      path: /api/events/health
+      initialDelaySeconds: 30
+      periodSeconds: 15
 
 # Kafka configuration
 kafka:

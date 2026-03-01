@@ -6,7 +6,7 @@ metadata:
   labels:
     app: events-service
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: events-service
@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: events-service
-#          image: ghcr.io/your-org/your-repo/events-service:latest  # будет заменено CI/CD
+          #          image: ghcr.io/your-org/your-repo/events-service:latest  # будет заменено CI/CD
           image: ghcr.io/andruschenco/architecture-pro-cinemaabyss/events-service:latest
           ports:
             - containerPort: 8082

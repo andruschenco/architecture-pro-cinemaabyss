@@ -33,7 +33,7 @@
       MONOLITH_URL: http://monolith:8080
       #монолит
       MOVIES_SERVICE_URL: http://movies-service:8081 #сервис movies
-      EVENTS_SERVICE_URL: http://events-service:8082 
+      EVENTS_SERVICE_URL: http://events-service:8082
       GRADUAL_MIGRATION: "true" # вкл/выкл простого фиче-флага
       MOVIES_MIGRATION_PERCENT: "50" # процент миграции
     networks:
@@ -461,9 +461,6 @@ jobs:
    ```
 ```bash
   user@myPlatform:~/.docker$ cat ./config.json | base64
-  ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6ICJZVzVrY25WelkyaGxibU52
-  T21kb2NGOU1iM0puYWs1YVZXMVhRWGx2ZVU5M1VEbFJTVGhpWTFWbGNHdFljMk14V1hwdFdIaz0i
-  CgkJfQoJfQp9
 ```
 ```base64
 ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6ICJZVzVrY25WelkyaGxibU52T21kb2NGOU1iM0puYWs1YVZXMVhRWGx2ZVU5M1VEbFJTVGhpWTFWbGNHdFljMk14V1hwdFdIaz0iCgkJfQoJfQp9
@@ -477,10 +474,25 @@ ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6ICJZVzVrY25WelkyaGxibU52T21k
 - Доработайте ingress.yaml, чтобы можно было с помощью тестов проверить создание событий
 - Выполните дальшейшие шаги для поднятия кластера:
 
+0. Запустить minikube
+```bash
+  minikube start --driver=docker
+  
+  # Если ничего не помогает,
+  kubectl delete namespace cinemaabyss # Удалить namespace (это удалит ВСЁ в нём)
+  kubectl apply -f src/kubernetes/namespace.yaml # Создать namespace заново
+  kubectl apply -f src/kubernetes/ # Применить все манифесты (если они у вас есть) – например:
+```
+
 1. Создайте namespace:
 ```bash
   kubectl apply -f src/kubernetes/namespace.yaml
   ```
+```bash
+  # Результат
+  namespace/cinemaabyss created
+```
+
 2. Создайте секреты и переменные
 ```bash
   kubectl apply -f src/kubernetes/configmap.yaml
@@ -499,7 +511,6 @@ ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6ICJZVzVrY25WelkyaGxibU52T21k
   kubectl -n cinemaabyss get pod
   ```
 Вы увидите
-
 NAME         READY   STATUS    
 postgres-0   1/1     Running
 
@@ -531,23 +542,15 @@ postgres-0   1/1     Running
   ```bash
   kubectl -n cinemaabyss get pod
   ```
-
 Будет наподобие такого
 
 NAME                              READY   STATUS
-
 events-service-7587c6dfd5-6whzx   1/1     Running
-
 kafka-0                           1/1     Running
-
 monolith-8476598495-wmtmw         1/1     Running
-
 movies-service-6d5697c584-4qfqs   1/1     Running
-
 postgres-0                        1/1     Running
-
 proxy-service-577d6c549b-6qfcv    1/1     Running
-
 zookeeper-0                       1/1     Running
 
 8. Добавим ingress
@@ -556,9 +559,22 @@ zookeeper-0                       1/1     Running
   ```bash
   minikube addons enable ingress
   ```
+
+[//]: # (💡  ingress is an addon maintained by Kubernetes. For any concerns contact minikube on GitHub.)
+[//]: # (You can view the list of minikube maintainers at: https://github.com/kubernetes/minikube/blob/master/OWNERS)
+[//]: # (▪ Using image registry.k8s.io/ingress-nginx/controller:v1.14.3)
+[//]: # (▪ Using image registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.7)
+[//]: # (▪ Using image registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.7)
+[//]: # (🔎  Verifying ingress addon...)
+[//]: # (🌟  The 'ingress' addon is enable  )
+
   ```bash
   kubectl apply -f src/kubernetes/ingress.yaml
   ```
+
+[//]: # ( Warning: annotation "kubernetes.io/ingress.class" is deprecated, please use 'spec.ingressClassName' instead)
+[//]: # ( ingress.networking.k8s.io/cinemaabyss-ingress created)
+
 9. Добавьте в /etc/hosts
    127.0.0.1 cinemaabyss.example.com
 
@@ -570,6 +586,7 @@ zookeeper-0                       1/1     Running
     Вы должны увидеть вывод списка фильмов
     Можно поэкспериментировать со значением   MOVIES_MIGRATION_PERCENT в src/kubernetes/configmap.yaml и убедится, что вызовы movies уходят полностью в новый сервис
 
+
 12. Запустите тесты из папки tests/postman
   ```bash
    npm run test:kubernetes
@@ -579,10 +596,206 @@ zookeeper-0                       1/1     Running
 
 #### Шаг 3
 Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и  скриншот вывода event-service после вызова тестов.
+###### Результат открытия http://cinemaabyss.example.com/api/movies в браузере
+![ex3_part1_2_api_movies.png](ex3_part1_2_api_movies.png)
+
+###### Результат выполнения npm run test:kubernetes
+   ```bash
+node run-tests.js --environment kubernetes
+
+Running tests against kubernetes environment...
+newman: could not find "htmlextra" reporter
+ensure that the reporter is installed in the same directory as newman
+please install reporter using npm
+
+newman
+
+CinemaAbyss API Tests
+
+❏ Monolith Service
+↳ Health Check
+GET http://cinemaabyss.example.com/health [200 OK, 178B, 43ms]
+✓  Status code is 200
+
+↳ Get All Users
+GET http://cinemaabyss.example.com/api/users [200 OK, 333B, 7ms]
+✓  Status code is 200
+✓  Response is an array
+
+↳ Create User
+POST http://cinemaabyss.example.com/api/users [201 Created, 235B, 170ms]
+✓  Status code is 201
+✓  Response has id
+
+↳ Get User by ID
+GET http://cinemaabyss.example.com/api/users?id=4 [200 OK, 230B, 8ms]
+✓  Status code is 200
+✓  User ID matches
+
+↳ Get All Movies
+GET http://cinemaabyss.example.com/api/movies [200 OK, 1.43kB, 22ms]
+✓  Status code is 200
+✓  Response is an array
+
+↳ Create Movie
+POST http://cinemaabyss.example.com/api/movies [201 Created, 298B, 183ms]
+✓  Status code is 201
+✓  Response has id
+
+↳ Get Movie by ID
+GET http://cinemaabyss.example.com/api/movies?id=6 [200 OK, 293B, 8ms]
+✓  Status code is 200
+✓  Movie ID matches
+
+↳ Create Payment
+POST http://cinemaabyss.example.com/api/payments [201 Created, 247B, 49ms]
+✓  Status code is 201
+✓  Response has id
+
+↳ Get Payment by ID
+GET http://cinemaabyss.example.com/api/payments?id=4 [200 OK, 239B, 9ms]
+✓  Status code is 200
+✓  Payment ID matches
+
+↳ Create Subscription
+POST http://cinemaabyss.example.com/api/subscriptions [201 Created, 289B, 14ms]
+✓  Status code is 201
+✓  Response has id
+
+↳ Get Subscription by ID
+GET http://cinemaabyss.example.com/api/subscriptions?id=4 [200 OK, 284B, 6ms]
+✓  Status code is 200
+✓  Subscription ID matches
+
+❏ Movies Microservice
+↳ Health Check
+GET http://cinemaabyss.example.com/api/movies/health [200 OK, 178B, 7ms]
+✓  Status code is 200
+✓  Status is true
+
+↳ Get All Movies
+GET http://cinemaabyss.example.com/api/movies [200 OK, 1.56kB, 11ms]
+✓  Status code is 200
+✓  Response is an array
+
+↳ Create Movie
+POST http://cinemaabyss.example.com/api/movies [201 Created, 336B, 14ms]
+✓  Status code is 201
+✓  Response has id
+
+↳ Get Movie by ID
+GET http://cinemaabyss.example.com/api/movies?id=7 [200 OK, 331B, 19ms]
+✓  Status code is 200
+✓  Movie ID matches
+
+❏ Events Microservice
+↳ Health Check
+GET http://cinemaabyss.example.com/api/events/health [200 OK, 186B, 3.5s]
+✓  Status code is 200
+✓  Status is true
+
+↳ Create Movie Event
+POST http://cinemaabyss.example.com/api/events/movie [errored]
+ESOCKETTIMEDOUT
+2. Status code is 201
+3. Response has status success
+
+↳ Create User Event
+POST http://cinemaabyss.example.com/api/events/user [errored]
+ESOCKETTIMEDOUT
+5. Status code is 201
+6. Response has status success
+
+↳ Create Payment Event
+POST http://cinemaabyss.example.com/api/events/payment [201 Created, 196B, 3.1s]
+✓  Status code is 201
+✓  Response has status success
+
+❏ Proxy Service
+↳ Health Check
+GET http://cinemaabyss.example.com/health [200 OK, 178B, 6ms]
+✓  Status code is 200
+
+↳ Get All Movies via Proxy
+GET http://cinemaabyss.example.com/api/movies [200 OK, 1.73kB, 16ms]
+✓  Status code is 200
+✓  Response is an array
+
+↳ Get All Users via Proxy
+GET http://cinemaabyss.example.com/api/users [200 OK, 401B, 11ms]
+✓  Status code is 200
+✓  Response is an array
+
+┌─────────────────────────┬───────────────────┬───────────────────┐
+│                         │          executed │            failed │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│              iterations │                 1 │                 0 │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│                requests │                22 │                 2 │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│            test-scripts │                22 │                 0 │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│      prerequest-scripts │                 0 │                 0 │
+├─────────────────────────┼───────────────────┼───────────────────┤
+│              assertions │                42 │                 4 │
+├─────────────────────────┴───────────────────┴───────────────────┤
+│ total run duration: 30.2s                                       │
+├─────────────────────────────────────────────────────────────────┤
+│ total data received: 5.85kB (approx)                            │
+├─────────────────────────────────────────────────────────────────┤
+│ average response time: 356ms [min: 6ms, max: 3.5s, s.d.: 989ms] │
+└─────────────────────────────────────────────────────────────────┘
+
+#  failure                              detail
+
+1.  Error                                ESOCKETTIMEDOUT                                                                                                                                
+    at request                                                                                                                                     
+    inside ""
+
+2.  AssertionError                       Status code is 201                                                                                                                             
+    expected PostmanResponse{ …(5) } to have property 'code'                                                                                       
+    at assertion:0 in test-script                                                                                                                  
+    inside "Events Microservice / Create Movie Event"
+
+3.  JSONError                            Response has status success                                                                                                                    
+    Unexpected token u in JSON at position 0                                                                                                       
+    at assertion:1 in test-script                                                                                                                  
+    inside "Events Microservice / Create Movie Event"
+
+4.  Error                                ESOCKETTIMEDOUT                                                                                                                                
+    at request                                                                                                                                     
+    inside ""
+
+5.  AssertionError                       Status code is 201                                                                                                                             
+    expected PostmanResponse{ …(5) } to have property 'code'                                                                                       
+    at assertion:0 in test-script                                                                                                                  
+    inside "Events Microservice / Create User Event"
+
+6.  JSONError                            Response has status success                                                                                                                    
+    Unexpected token u in JSON at position 0                                                                                                       
+    at assertion:1 in test-script                                                                                                                  
+    inside "Events Microservice / Create User Event"                                                                                               
+    Newman run completed!
+    Total requests: 22
+    Failed requests: 2
+    Total assertions: 42
+    Failed assertions: 4
+  ```
+
+###### Результат выполнения npm run test:kubernetes в логах event-service
+![ex3_part1_2_npn_test_events-service.png](ex3_part1_2_npn_test_events-service.png)
 
 
 ## Задание 4
 Для простоты дальнейшего обновления и развертывания вам как архитектуру необходимо так же реализовать helm-чарты для прокси-сервиса и проверить работу
+
+Радикальное, но надёжное решение если проблемы с подами, pvc и т.д.
+```bash
+minikube delete
+minikube start --driver=docker
+helm install cinemaabyss ./src/kubernetes/helm --namespace cinemaabyss --create-namespace
+kubectl -n cinemaabyss get pods -w
+```
 
 Для этого:
 1. Перейдите в директорию helm и отредактируйте файл values.yaml
@@ -637,7 +850,7 @@ kubectl delete  namespace cinemaabyss
 ```
 Запустите
 ```bash
-helm install cinemaabyss .\src\kubernetes\helm --namespace cinemaabyss --create-namespace
+  helm install cinemaabyss .\src\kubernetes\helm --namespace cinemaabyss --create-namespace
 ```
 Если в процессе будет ошибка
 ```code
@@ -647,14 +860,21 @@ kafka.common.InconsistentClusterIdException: The Cluster ID OkOjGPrdRimp8nkFohYk
 
 Проверьте развертывание:
 ```bash
-kubectl get pods -n cinemaabyss
-minikube tunnel
+  kubectl get pods -n cinemaabyss
+  minikube tunnel
 ```
 
 Потом вызовите
 https://cinemaabyss.example.com/api/movies
 и приложите скриншот развертывания helm и вывода https://cinemaabyss.example.com/api/movies
 
+###### Результат команды kubectl get pods -n cinemaabyss
+![ex4_get_pods.png](ex4_get_pods.png)
+###### Cкриншот развертывания helm
+![ex4_helm_statгs_scr_1.jpg](ex4_helm_stat%D0%B3s_scr_1.jpg)
+![ex4_helm_statгs_scr_2.jpg](ex4_helm_stat%D0%B3s_scr_2.jpg)
+###### Результат вывода https://cinemaabyss.example.com/api/movies
+![ex4_Request_https_cinemaabyss_example_com_api_movies.png](ex4_Request_https_cinemaabyss_example_com_api_movies.png)
 
 # Задание 5
 Компания планирует активно развиваться и для повышения надежности, безопасности, реализации сетевых паттернов типа Circuit Breaker и канареечного деплоя вам как архитектору необходимо развернуть istio и настроить circuit breaker для monolith и movies сервисов.
@@ -720,11 +940,12 @@ You can see 21 for the upstream_rq_pending_overflow value which means 21 calls s
 ```
 
 Приложите скриншот работы circuit breaker'а
+![ex5_circuit_breaker.png](ex5_circuit_breaker.png)
 
 Удаляем все
 ```bash
-istioctl uninstall --purge
-kubectl delete namespace istio-system
-kubectl delete all --all -n cinemaabyss
-kubectl delete namespace cinemaabyss
+  istioctl uninstall --purge
+  kubectl delete namespace istio-system
+  kubectl delete all --all -n cinemaabyss
+  kubectl delete namespace cinemaabyss
 ```
