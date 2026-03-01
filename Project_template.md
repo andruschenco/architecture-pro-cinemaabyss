@@ -402,12 +402,12 @@ jobs:
     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
    
     user@myPlatform:~$ echo -n andruschenco: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 | base64
-    YW5kcnVzY2hlbmNvOmdocF9Mb3Jnak5aVW1XQXlveU93UDlRSThiY1VlcGtYc2MxWXptWHk=
+    <TOKEN>
     user@myPlatform:~$
    ```
 ###### После создания токена необходимо авторизоваться на login ghcr.io, для этого выполним.
 ```bash
-    echo "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" | docker login ghcr.io -u andruschenco --password-stdin
+    echo "<TOKEN>" | docker login ghcr.io -u andruschenco --password-stdin
     -----------------------------------
     WARNING! Your credentials are stored unencrypted in '/home/user/.docker/config.json'.
     Configure a credential helper to remove this warning. See
@@ -463,7 +463,7 @@ jobs:
   user@myPlatform:~/.docker$ cat ./config.json | base64
 ```
 ```base64
-ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6ICJZVzVrY25WelkyaGxibU52T21kb2NGOU1iM0puYWs1YVZXMVhRWGx2ZVU5M1VEbFJTVGhpWTFWbGNHdFljMk14V1hwdFdIaz0iCgkJfQoJfQp9
+TOCEN_FILE
 ```
 
 #### Шаг 2
