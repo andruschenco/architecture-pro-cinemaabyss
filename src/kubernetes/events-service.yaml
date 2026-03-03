@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: events-service
+  namespace: cinemaabyss
+  labels:
+    app: events-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: events-service
+  template:
+    metadata:
+      labels:
+        app: events-service
+    spec:
+      containers:
+        - name: events-service
+          #          image: ghcr.io/your-org/your-repo/events-service:latest  # будет заменено CI/CD
+          image: ghcr.io/andruschenco/architecture-pro-cinemaabyss/events-service:latest
+          ports:
+            - containerPort: 8082
+          env:
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"   # предполагаем, что Kafka доступна по имени
+            - name: SPRING_KAFKA_CONSUMER_GROUP_ID
+              value: "cinema-group"
+          readinessProbe:
+            httpGet:
+              path: /api/events/health
+              port: 8082
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/events/health
+              port: 8082
+            initialDelaySeconds: 30
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: events-service
+  namespace: cinemaabyss
+spec:
+  selector:
+    app: events-service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8082
+  type: ClusterIP

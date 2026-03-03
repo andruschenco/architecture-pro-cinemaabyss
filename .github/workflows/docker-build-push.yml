@@ -3,7 +3,7 @@ name: Docker Build and Push
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [ main, cinema ]
     paths:
       - 'src/**'
       - '.github/workflows/docker-build-push.yml'
@@ -26,7 +26,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -82,4 +82,70 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      
+      # ---------- Events Service ----------
+      - name: Extract metadata for Events Service
+        id: meta-events
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.EVENTS_SERVICE_IMAGE_NAME }}
+          tags: |
+            type=sha,format=short
+            type=ref,event=branch
+            latest
+
+      - name: Build and push Events Service
+        uses: docker/build-push-action@v4
+        with:
+          context: ./src/microservices/events
+          push: true
+          tags: ${{ steps.meta-events.outputs.tags }}
+          labels: ${{ steps.meta-events.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ---------- Proxy Service ----------
+      - name: Extract metadata for Proxy Service
+        id: meta-proxy
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.PROXY_SERVICE_IMAGE_NAME }}
+          tags: |
+            type=sha,format=short
+            type=ref,event=branch
+            latest
+
+      - name: Build and push Proxy Service
+        uses: docker/build-push-action@v4
+        with:
+          context: ./src/microservices/proxy
+          push: true
+          tags: ${{ steps.meta-proxy.outputs.tags }}
+          labels: ${{ steps.meta-proxy.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ---------- Запуск API-тестов ----------
+#      - name: Set up Docker Compose for testing
+#        run: |
+#          docker compose -f .github/workflows/api-tests.yml up -d
+#          sleep 30
+#          docker compose -f .github/workflows/api-tests.yml ps
+#
+#      - name: Run API tests
+#        run: |
+##           Установка зависимостей (пример для Python, замените под ваш стек)
+#          pip install pytest requests
+#          pytest tests/ -v --tb=short
+#
+#      - name: Collect test logs
+#        if: always()
+#        run: |
+#          docker compose -f .github/workflows/api-tests.yml logs > test-logs.txt
+#          docker compose -f .github/workflows/api-tests.yml down -v
+#
+#      - name: Upload test logs
+#        if: always()
+#        uses: actions/upload-artifact@v4.0.0
+#        with:
+#          name: test-logs
+#          path: test-logs.txt

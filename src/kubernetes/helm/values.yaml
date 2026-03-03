@@ -5,7 +5,7 @@ global:
 
 # Image pull secrets
 imagePullSecrets:
-  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6
+  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6ICJZVzVrY25WelkyaGxibU52T21kb2NGOVZORFV3Y1VkcVNrbEVZM1pLU0ROWVoycERUbVV5VnpOa2JVVjJaRXd6Y0Vsa1MxUT0iCgkJfQoJfQp9
 # Database configuration
 database:
   host: postgres
@@ -33,7 +33,7 @@ database:
 monolith:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/monolith
+    repository: ghcr.io/andruschenco/architecture-pro-cinemaabyss/monolith
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -53,7 +53,8 @@ monolith:
 proxyService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/proxy-service
+    #    repository: ghcr.io/db-exp/cinemaabysstest/proxy-service
+    repository: ghcr.io/andruschenco/architecture-pro-cinemaabyss/proxy-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -68,12 +69,28 @@ proxyService:
     port: 80
     targetPort: 8000
     type: ClusterIP
+  probes:                           # add after feedback
+    readiness:
+      path: /health
+      port: 8000
+      initialDelaySeconds: 30      # даем приложению 15 секунд на старт
+      periodSeconds: 10
+      timeoutSeconds: 5             # увеличиваем таймаут до 5 секунд
+      failureThreshold: 5
+    liveness:
+      path: /health
+      port: 8000
+      initialDelaySeconds: 40
+      periodSeconds: 15
+      timeoutSeconds: 5
+      failureThreshold: 5
+
 
 # Movies service configuration
 moviesService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/movies-service
+    repository: ghcr.io/andruschenco/architecture-pro-cinemaabyss/movies-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -93,7 +110,7 @@ moviesService:
 eventsService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/events-service
+    repository: ghcr.io/andruschenco/architecture-pro-cinemaabyss/events-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -108,6 +125,18 @@ eventsService:
     port: 8082
     targetPort: 8082
     type: ClusterIP
+  env:
+    SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    SPRING_KAFKA_CONSUMER_GROUP_ID: "cinema-group"
+  probes:
+    readiness:
+      path: /api/events/health
+      initialDelaySeconds: 10
+      periodSeconds: 5
+    liveness:
+      path: /api/events/health
+      initialDelaySeconds: 30
+      periodSeconds: 15
 
 # Kafka configuration
 kafka:
