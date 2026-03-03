@@ -23,9 +23,11 @@ spec:
       labels:
         app: events-service
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-        - name: {{ .name }}
+        {{- range .Values.imagePullSecrets }}
+        - name: {{ . }}
+        {{- end }}
       {{- end }}
       containers:
         - name: {{ .Values.eventsService.name | default "events-service" }}

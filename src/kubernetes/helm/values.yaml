@@ -5,8 +5,7 @@ global:
 
 # Image pull secrets
 imagePullSecrets:
-  #  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6
-  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6ICJZVzVrY25WelkyaGxibU52T21kb2NGOU1iM0puYWs1YVZXMVhRWGx2ZVU5M1VEbFJTVGhpWTFWbGNHdFljMk14V1hwdFdIaz0iCgkJfQoJfQp9
+  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6ICJZVzVrY25WelkyaGxibU52T21kb2NGOVZORFV3Y1VkcVNrbEVZM1pLU0ROWVoycERUbVV5VnpOa2JVVjJaRXd6Y0Vsa1MxUT0iCgkJfQoJfQp9
 # Database configuration
 database:
   host: postgres
@@ -70,6 +69,22 @@ proxyService:
     port: 80
     targetPort: 8000
     type: ClusterIP
+  probes:                           # add after feedback
+    readiness:
+      path: /health
+      port: 8000
+      initialDelaySeconds: 30      # даем приложению 15 секунд на старт
+      periodSeconds: 10
+      timeoutSeconds: 5             # увеличиваем таймаут до 5 секунд
+      failureThreshold: 5
+    liveness:
+      path: /health
+      port: 8000
+      initialDelaySeconds: 40
+      periodSeconds: 15
+      timeoutSeconds: 5
+      failureThreshold: 5
+
 
 # Movies service configuration
 moviesService:

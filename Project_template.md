@@ -463,7 +463,7 @@ jobs:
   user@myPlatform:~/.docker$ cat ./config.json | base64
 ```
 ```base64
-TOCEN_FILE
+TOKEN_FILE
 ```
 
 #### Шаг 2

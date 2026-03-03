@@ -7,7 +7,8 @@ from typing import Dict, Any
 
 # Чтение переменных окружения
 PORT = int(os.getenv("PORT", 8000))
-MONOLITH_URL = os.getenv("MONOLITH_URL", "http://monolith:8888")  #--- TODO: 8080 -> 8888 I.A.
+#MONOLITH_URL = os.getenv("MONOLITH_URL", "http://monolith:8888")  #--- TODO: 8080 -> 8888 I.A.
+MONOLITH_URL = os.getenv("MONOLITH_URL", "http://monolith:8080")  #--- TODO: I.A. 2026-03-04
 MOVIES_SERVICE_URL = os.getenv("MOVIES_SERVICE_URL", "http://movies-service:8081")
 EVENTS_SERVICE_URL = os.getenv("EVENTS_SERVICE_URL", "http://events-service:8082")
 GRADUAL_MIGRATION = os.getenv("GRADUAL_MIGRATION", "false").lower() == "true"
